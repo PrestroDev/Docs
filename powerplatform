@@ -1,0 +1,30 @@
+# Connect to Power Platform
+Connect-PowerApps
+
+# Get all custom connectors
+$connectors = Get-PowerAppsCustomConnector
+
+# Create an empty array to store the connector information
+$connectorData = @()
+
+# Loop through each connector
+foreach ($connector in $connectors) {
+    # Get the policy information
+    $policy = Get-PowerAppsCustomConnectorPolicy -CustomConnectorId $connector.Id
+
+    # Create a custom object to store the connector information
+    $obj = [pscustomobject]@{
+        'Policy Name' = $policy.Name
+        'Custom Endpoint URL' = $connector.CustomEndpointUrl
+        'Connector Name' = $connector.DisplayName
+        'Created By' = $connector.CreatedBy.Email
+        'Modified By' = $connector.LastModifiedBy.Email
+        'Environment' = $connector.Environment.Name
+    }
+
+    # Add the object to the array
+    $connectorData += $obj
+}
+
+# Export the connector data to a CSV file
+$connectorData | Export-Csv -Path "C:\Connectors.csv" -NoTypeInformation
