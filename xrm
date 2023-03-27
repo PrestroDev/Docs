@@ -1,0 +1,65 @@
+using Microsoft.Xrm.Sdk;
+using Microsoft.Xrm.Sdk.Messages;
+using Microsoft.Xrm.Sdk.Metadata;
+using Microsoft.Xrm.Sdk.Query;
+using Microsoft.Xrm.Tooling.Connector;
+using System;
+
+// Define the connection parameters
+string connectionString = "AuthType=OAuth; " +
+    "Username={username}; " +
+    "Password={password}; " +
+    "Url=https://org.crm.dynamics.com; " +
+    "AppId={clientId}; " +
+    "RedirectUri=app://unique-guid-here";
+
+// Create the CrmServiceClient instance
+var crmServiceClient = new CrmServiceClient(connectionString);
+
+// Define the friendly name of the solution for which you want to retrieve custom connectors
+string solutionFriendlyName = "My Solution";
+
+// Retrieve the solution record using the friendly name
+var solutionQuery = new QueryExpression("solution")
+{
+    ColumnSet = new ColumnSet("solutionid"),
+    Criteria = new FilterExpression(LogicalOperator.And)
+    {
+        Conditions =
+        {
+            new ConditionExpression("friendlyname", ConditionOperator.Equal, solutionFriendlyName),
+            new ConditionExpression("ismanaged", ConditionOperator.Equal, false)
+        }
+    }
+};
+
+var solution = crmServiceClient.RetrieveMultiple(solutionQuery).Entities.FirstOrDefault();
+
+if (solution == null)
+{
+    Console.WriteLine($"Solution with friendly name '{solutionFriendlyName}' not found.");
+    return;
+}
+
+// Create the QueryExpression to retrieve the custom connectors from the solution
+var query = new QueryExpression("customapi")
+{
+    ColumnSet = new ColumnSet("name"),
+    Criteria = new FilterExpression(LogicalOperator.And)
+    {
+        Conditions =
+        {
+            new ConditionExpression("_solutionid_value", ConditionOperator.Equal, solution.Id)
+        }
+    }
+};
+
+// Retrieve the custom connectors from the solution using the IOrganizationService interface
+var customConnectors = crmServiceClient.RetrieveMultiple(query).Entities;
+
+// Print the names of the custom connectors to the console
+foreach (var customConnector in customConnectors)
+{
+    string name = customConnector.GetAttributeValue<string>("name");
+    Console.WriteLine($"Custom connector found: {name}");
+}
