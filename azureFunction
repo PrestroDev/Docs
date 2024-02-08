@@ -39,21 +39,26 @@ public static class MyFunction
 
     private static (bool isValidToken, string userId) ValidateToken(string token)
     {
-        // Add your token validation logic here
-        // For example, you can validate the token against Azure AD, or perform JWT validation
-        // This is just a placeholder method for demonstration purposes
+        try
+        {
+            // Decode the JWT token
+            var handler = new JwtSecurityTokenHandler();
+            var jsonToken = handler.ReadJwtToken(token);
 
-        // Decode the JWT token
-        var handler = new JwtSecurityTokenHandler();
-        var jsonToken = handler.ReadToken(token) as JwtSecurityToken;
+            // Example: Extract 'sub' claim (user ID)
+            var userId = jsonToken.Subject;
 
-        // Example: Extract 'sub' claim (user ID)
-        var userId = jsonToken.Claims.FirstOrDefault(claim => claim.Type == "sub")?.Value;
+            // Check if the token is valid (e.g., signature validation, expiration, etc.)
+            // This is just a placeholder check for demonstration purposes
+            var isValidToken = !string.IsNullOrEmpty(userId);
 
-        // Check if the token is valid (e.g., signature validation, expiration, etc.)
-        // This is just a placeholder check for demonstration purposes
-        var isValidToken = !string.IsNullOrEmpty(userId);
-
-        return (isValidToken, userId);
+            return (isValidToken, userId);
+        }
+        catch (Exception ex)
+        {
+            // Log the exception
+            Console.WriteLine($"Error decoding token: {ex.Message}");
+            return (false, null);
+        }
     }
 }
