@@ -1,0 +1,59 @@
+using System;
+using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.Extensions.Logging;
+
+public static class MyFunction
+{
+    [FunctionName("MyFunction")]
+    public static IActionResult Run(
+        [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
+        ILogger log)
+    {
+        // Check if Authorization header is present
+        if (!req.Headers.ContainsKey("Authorization"))
+        {
+            return new UnauthorizedResult();
+        }
+
+        // Extract the token from Authorization header
+        string token = req.Headers["Authorization"].ToString().Replace("Bearer ", "");
+
+        // Validate the token (e.g., using Azure AD, JWT validation, etc.)
+        var (isValidToken, userId) = ValidateToken(token);
+
+        if (!isValidToken)
+        {
+            return new UnauthorizedResult();
+        }
+
+        // Token is valid, proceed with your function logic
+        log.LogInformation($"Token is valid. User ID: {userId}. Performing function logic...");
+
+        return new OkObjectResult($"Hello, user {userId}!");
+    }
+
+    private static (bool isValidToken, string userId) ValidateToken(string token)
+    {
+        // Add your token validation logic here
+        // For example, you can validate the token against Azure AD, or perform JWT validation
+        // This is just a placeholder method for demonstration purposes
+
+        // Decode the JWT token
+        var handler = new JwtSecurityTokenHandler();
+        var jsonToken = handler.ReadToken(token) as JwtSecurityToken;
+
+        // Example: Extract 'sub' claim (user ID)
+        var userId = jsonToken.Claims.FirstOrDefault(claim => claim.Type == "sub")?.Value;
+
+        // Check if the token is valid (e.g., signature validation, expiration, etc.)
+        // This is just a placeholder check for demonstration purposes
+        var isValidToken = !string.IsNullOrEmpty(userId);
+
+        return (isValidToken, userId);
+    }
+}
