@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoke Azure Function</title>
+</head>
+<body>
+    <button onclick="callAzureFunction()">Send Request</button>
+    <div id="response"></div>
+
+    <script>
+        async function callAzureFunction() {
+            try {
+                const url = 'https://your-function-app-url.azurewebsites.net/api/MyFunction';
+                const token = 'your_access_token_here';
+                const options = {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                };
+
+                const response = await fetch(url, options);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('response').innerText = JSON.stringify(data);
+                } else {
+                    document.getElementById('response').innerText = `Error: ${response.status}`;
+                }
+            } catch (error) {
+                document.getElementById('response').innerText = `Error: ${error}`;
+            }
+        }
+    </script>
+</body>
+</html>
